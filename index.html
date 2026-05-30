@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模块九：Missile 范围爆炸 — 课件PPT</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --primary:#f3a21c;
+  --secondary:#27ae60;
+  --danger:#e74c3c;
+  --purple:#8e44ad;
+  --dark:#333;
+  --text:#333;
+  --muted:#64748b;
+  --bg:#fff;
+  --code-bg:#1a1a2e;
+}
+html,body { width:100%; height:100%; overflow:hidden; font-family:Arial,"Microsoft YaHei",sans-serif; background:#f0f2f5; }
+#ppt-container { width:100%; height:100%; position:relative; }
+.slide {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  display:none; padding:60px 80px 80px; background:var(--bg);
+  transition: opacity .4s ease;
+}
+.slide.active { display:flex; flex-direction:column; }
+.slide-content { flex:1; overflow-y:auto; }
+
+/* 标题页 */
+.slide-title .slide-content {
+  display:flex; flex-direction:column; justify-content:center;
+}
+.slide-title h1 { font-size:3.2em; color:var(--dark); margin-bottom:.3em; }
+.slide-title .subtitle { font-size:1.4em; color:var(--muted); }
+.slide-title .tag {
+  display:inline-block; background:var(--primary); color:#fff;
+  padding:6px 18px; border-radius:20px; font-size:1em; font-weight:bold;
+  margin-bottom:1.5em; width:fit-content;
+}
+
+/* 内容页通用 */
+h2 { font-size:2em; color:var(--dark); margin-bottom:.6em; position:relative; }
+h2::after {
+  content:''; display:block; width:60px; height:4px;
+  background:var(--primary); margin-top:8px; border-radius:2px;
+}
+
+/* 列表 */
+.slide ul { list-style:none; margin-top:1em; }
+.slide ul li {
+  font-size:1.15em; color:var(--text); margin:.6em 0;
+  padding-left:1.5em; position:relative; line-height:1.6;
+}
+.slide ul li::before {
+  content:'▸'; position:absolute; left:0; color:var(--primary); font-weight:bold;
+}
+
+/* 代码块 */
+pre {
+  background:var(--code-bg); color:#fff; padding:20px 24px;
+  border-radius:10px; font-family:Consolas,Monaco,"Courier New",monospace;
+  font-size:.95em; line-height:1.6; overflow-x:auto; margin:1em 0;
+}
+code {
+  font-family:Consolas,Monaco,"Courier New",monospace;
+  background:#f3f4f6; color:#d73a49; padding:2px 6px; border-radius:4px;
+  font-size:.9em;
+}
+pre code { background:none; color:inherit; padding:0; }
+
+/* 两栏布局 */
+.two-col { display:flex; gap:40px; margin-top:1em; }
+.two-col .col { flex:1; }
+
+/* 卡片 */
+.card {
+  background:#f8f9fa; border-radius:10px; padding:20px;
+  border-left:4px solid var(--primary); margin:1em 0;
+}
+.card-green { border-left-color:var(--secondary); }
+.card-red { border-left-color:var(--danger); }
+.card-purple { border-left-color:var(--purple); }
+
+/* 流程图样式 */
+.flow-box {
+  background:#f8f9fa; border-radius:10px; padding:20px 24px;
+  font-family:Consolas,monospace; line-height:2; white-space:pre-wrap;
+  margin:1em 0; font-size:1em;
+}
+
+/* 底部导航 */
+#nav-bar {
+  position:fixed; bottom:0; left:0; right:0; height:60px;
+  background:#fff; border-top:1px solid #e5e7eb;
+  display:flex; align-items:center; justify-content:center; gap:20px;
+  z-index:999; padding:0 40px;
+}
+#nav-bar button {
+  background:var(--primary); color:#fff; border:none;
+  padding:8px 20px; border-radius:6px; font-size:1em; cursor:pointer;
+  transition: all .2s;
+}
+#nav-bar button:hover { background:#e09518; transform:translateY(-2px); }
+#nav-bar button:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+#slide-counter { font-size:1em; color:var(--muted); min-width:80px; text-align:center; }
+
+/* 提示框 */
+.tip {
+  background:#fdf2f8; border-radius:8px; border-left:4px solid #d946ef;
+  color:#701a75; padding:14px 18px; font-size:.95em; margin:1em 0;
+}
+
+/* 高亮文字 */
+.hl { color:var(--primary); font-weight:bold; }
+.hl-green { color:var(--secondary); font-weight:bold; }
+.hl-red { color:var(--danger); font-weight:bold; }
+
+/* 页码角标 */
+.page-num {
+  position:absolute; top:20px; right:30px;
+  background:var(--primary); color:#fff;
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.85em; font-weight:bold;
+}
+
+/* 滚动条美化 */
+.slide-content::-webkit-scrollbar { width:6px; }
+.slide-content::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
+
+@media (max-width:900px) {
+  .slide { padding:40px 30px 70px; }
+  .slide-title h1 { font-size:2.2em; }
+  h2 { font-size:1.5em; }
+  .two-col { flex-direction:column; gap:20px; }
+}
+</style>
+</head>
+<body>
+
+<div id="ppt-container">
+
+<!-- 第1页：标题页 -->
+<section class="slide slide-title active">
+  <div class="slide-content">
+    <div class="tag">L5 · Wrap-up 巩固课</div>
+    <h1>🚀 Missile — 范围爆炸</h1>
+    <p class="subtitle">Godot 游戏开发课程 · 第五课</p>
+    <p class="subtitle" style="margin-top:.5em;">把学过的 signal、实例化、queue_free 串起来用</p>
+  </div>
+</section>
+
+<!-- 第2页：课程目标 -->
+<section class="slide">
+  <div class="page-num">2</div>
+  <div class="slide-content">
+    <h2>🎯 今天的目标</h2>
+    <ul>
+      <li>这节课是一节 <span class="hl">巩固课（Wrap-up）</span></li>
+      <li>我们不学全新的概念，而是把之前学过的知识串起来用</li>
+      <li style="margin-top:1em"><span class="hl">▶ 核心任务：</span>做一个新武器 —— Missile（导弹）</li>
+      <li>它会在发射后过一段时间自动爆炸消失</li>
+      <li style="margin-top:1em">通过做这个新功能，复习以下知识：</li>
+      <li>Area2D、Timer、Sprite2D 等节点</li>
+      <li>Signal、实例化、queue_free 等代码概念</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 第3页：回顾已做过什么 -->
+<section class="slide">
+  <div class="page-num">3</div>
+  <div class="slide-content">
+    <h2>📚 回顾：我们已经做过什么</h2>
+    <div class="two-col" style="margin-top:1.5em">
+      <div class="col">
+        <div class="card">
+          <strong style="color:var(--primary)">L1-L2</strong><br>
+          玩家移动 + 子弹发射<br>
+          <span style="color:var(--muted);font-size:.9em">Player可以走动，按空格发射Bullet</span>
+        </div>
+        <div class="card">
+          <strong style="color:var(--primary)">L2</strong><br>
+          敌人系统<br>
+          <span style="color:var(--muted);font-size:.9em">Enemy定时生成，被子弹击中后消失</span>
+        </div>
+        <div class="card">
+          <strong style="color:var(--primary)">L3</strong><br>
+          碰撞检测<br>
+          <span style="color:var(--muted);font-size:.9em">Area2D检测子弹和敌人的碰撞</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <strong style="color:var(--primary)">L3</strong><br>
+          信号系统<br>
+          <span style="color:var(--muted);font-size:.9em">用signal连接碰撞事件和消失逻辑</span>
+        </div>
+        <div class="card">
+          <strong style="color:var(--primary)">L4</strong><br>
+          GUI界面<br>
+          <span style="color:var(--muted);font-size:.9em">CanvasLayer + 血条/分数显示</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第4页：回顾节点 -->
+<section class="slide">
+  <div class="page-num">4</div>
+  <div class="slide-content">
+    <h2>🧩 回顾：我们学过的节点</h2>
+    <div class="two-col" style="margin-top:1.5em">
+      <div class="col">
+        <div class="card"><code>CharacterBody2D</code> — 玩家和敌人的移动</div>
+        <div class="card"><code>Area2D</code> — 碰撞检测范围</div>
+        <div class="card"><code>Timer</code> — 定时器，倒计时</div>
+        <div class="card"><code>Sprite2D</code> — 显示图片</div>
+      </div>
+      <div class="col">
+        <div class="card"><code>CollisionShape2D</code> — 碰撞形状</div>
+        <div class="card"><code>CanvasLayer</code> — UI层，显示在最上面</div>
+        <div class="card"><code>Label / ProgressBar</code> — 显示文字和血条</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第5页：回顾代码概念 -->
+<section class="slide">
+  <div class="page-num">5</div>
+  <div class="slide-content">
+    <h2>💡 回顾：我们学过的代码概念</h2>
+    <div class="card" style="margin-top:1.5em"><strong class="hl">Signal（信号）</strong><br><span style="color:var(--muted)">意思：</span>"一件事触发另一件事"<br><span style="color:var(--muted)">例子：</span>bullet碰到enemy → enemy消失</div>
+    <div class="card"><strong class="hl">实例化（instantiate）</strong><br><span style="color:var(--muted)">意思：</span>"从蓝图造出实物"<br><span style="color:var(--muted)">例子：</span>preload场景 → instantiate → add_child</div>
+    <div class="card"><strong class="hl">queue_free()</strong><br><span style="color:var(--muted)">意思：</span>"自己删除自己"<br><span style="color:var(--muted)">例子：</span>子弹飞出屏幕、敌人被击中后消失</div>
+  </div>
+</section>
+
+<!-- 第6页：引出 Missile -->
+<section class="slide">
+  <div class="page-num">6</div>
+  <div class="slide-content">
+    <h2>🚀 今天的新挑战</h2>
+    <p style="font-size:1.3em; margin-top:1em; color:var(--text)">我们要做一个新武器：<strong>Missile（导弹）</strong></p>
+    <p style="font-size:1.15em; margin-top:1.5em; color:var(--muted)">Missile 和 Bullet 有什么不同？</p>
+    <ul>
+      <li><strong>Bullet：</strong>直线飞行，碰到敌人消失</li>
+      <li><strong>Missile：</strong>发射后出现，过一会自动爆炸消失</li>
+    </ul>
+    <div class="tip" style="margin-top:1.5em">
+      <strong>核心问题：</strong>Missile 怎么知道自己该消失了？
+    </div>
+  </div>
+</section>
+
+<!-- 第7页：逐步梳理 -->
+<section class="slide">
+  <div class="page-num">7</div>
+  <div class="slide-content">
+    <h2>🤔 做 Missile 需要用到什么？</h2>
+    <div class="two-col" style="margin-top:1em">
+      <div class="col">
+        <div class="card"><strong>1. Missile 是一个场景</strong><br>→ 需要 .tscn 文件<br><span style="color:var(--muted);font-size:.9em">我们学过：Player.tscn, Enemy.tscn, Bullet.tscn</span></div>
+        <div class="card"><strong>2. Missile 要显示图片</strong><br>→ 需要 Sprite2D 节点<br><span style="color:var(--muted);font-size:.9em">每个场景都有 Sprite2D</span></div>
+        <div class="card"><strong>3. Missile 要检测碰撞</strong><br>→ 需要 Area2D 节点<br><span style="color:var(--muted);font-size:.9em">Bullet 和 Enemy 都用 Area2D 检测碰撞</span></div>
+      </div>
+      <div class="col">
+        <div class="card"><strong>4. Missile 要定时消失</strong><br>→ 需要 Timer 节点<br><span style="color:var(--muted);font-size:.9em">Enemy 用 Timer 定时生成</span></div>
+        <div class="card"><strong>5. Missile 要触发消失</strong><br>→ 需要 Signal<br><span style="color:var(--muted);font-size:.9em">timeout 信号 → queue_free()</span></div>
+        <div class="card"><strong>6. Missile 要从玩家位置发射</strong><br>→ 需要 Input + 实例化<br><span style="color:var(--muted);font-size:.9em">按 Z → instantiate → add_child</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第8页：完整流程图 -->
+<section class="slide">
+  <div class="page-num">8</div>
+  <div class="slide-content">
+    <h2>🎯 Missile 完整流程</h2>
+    <div class="two-col" style="margin-top:.5em; flex:1; align-items:center;">
+      <div class="col">
+        <p style="font-weight:bold; color:var(--primary); margin-bottom:.8em;">📥 触发 explode() 的两种方式</p>
+        <div class="flow-box" style="font-size:.9em; line-height:1.6;">按下 Z
+↓
+1. 实例化 Missile
+   missile_scene.instantiate()
+   get_parent().add_child(missile)
+↓
+2. Missile 飞行
+   _physics_process()
+   global_position += direction * speed * delta
+↓
+├─→ 3A. 1秒超时
+│     Timer 信号触发
+│     _on_timer_timeout() → explode()
+│
+└─→ 3B. 碰到 enemy
+      body_entered 信号触发
+      _on_body_entered(body) → explode()</div>
+      </div>
+      <div class="col">
+        <p style="font-weight:bold; color:var(--primary); margin-bottom:.8em;">📤 explode() 内部做了什么</p>
+        <div class="flow-box" style="font-size:.9em; line-height:1.6;">explode() 被调用
+↓
+1. 实例化 Explosion
+   explosion_scene.instantiate()
+↓
+2. 设置爆炸位置
+   explosion.global_position
+      = Missile.global_position
+↓
+3. 添加到场景
+   get_parent().add_child(explosion)
+↓
+4. 删除导弹自身
+   Missile.queue_free()
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第9页：Explosion爆炸流程 -->
+<section class="slide">
+  <div class="page-num">9</div>
+  <div class="slide-content">
+    <h2>💥 Explosion 爆炸流程</h2>
+    <div class="two-col" style="margin-top:.5em; flex:1; align-items:center;">
+      <div class="col">
+        <p style="font-weight:bold; color:var(--danger); margin-bottom:.8em;">📥 触发 body_entered 的时机</p>
+        <div class="flow-box" style="font-size:.9em; line-height:1.6;">1. Explosion 被实例化
+   explosion_scene.instantiate()
+↓
+2. 添加到场景
+   get_parent().add_child(explosion)
+↓
+3. Enemy 进入爆炸范围
+   Area2D 检测到碰撞
+↓
+4. body_entered 信号触发
+   _on_body_entered(body)
+↓
+5. 判断是否在 enemy 组
+   body.is_in_group("enemy")
+↓
+6. 销毁敌人
+   body.queue_free()</div>
+      </div>
+      <div class="col">
+        <p style="font-weight:bold; color:var(--danger); margin-bottom:.8em;">📤 Explosion 自动清理</p>
+        <div class="flow-box" style="font-size:.9em; line-height:1.6;">1. Explosion 出现
+   实例化并添加到场景
+↓
+2. Timer 开始倒计时
+   Wait Time = 0.2
+↓
+3. 0.2秒后
+   Timer.timeout 信号触发
+↓
+4. 调用超时回调
+   _on_timer_timeout()
+↓
+5. 删除自身
+   queue_free()</div>
+        <div class="tip" style="margin-top:.8em;">
+          <strong>注意：</strong>检测不到敌人时，先检查 Collision Layer / Mask 是否对应。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第10页：模块概览 -->
+<section class="slide">
+  <div class="page-num">10</div>
+    <div class="slide-content">
+      <h2>📋 三阶段模块概览</h2>
+    <div class="two-col" style="margin-top:1.5em">
+      <div class="col">
+        <div class="card card-green">
+          <strong style="color:var(--secondary); font-size:1.2em">模块 9.1</strong><br>
+          创建 Missile 场景<br>
+          实现自动飞行与 1 秒定时销毁<br>
+          <span style="color:var(--muted);font-size:.9em">核心：direction + speed + Timer</span>
+        </div>
+        <div class="card card-red">
+          <strong style="color:var(--danger); font-size:1.2em">模块 9.2</strong><br>
+          创建 Explosion 场景<br>
+          导弹超时后触发爆炸效果<br>
+          <span style="color:var(--muted);font-size:.9em">核心：explode() + instantiate</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card card-purple">
+          <strong style="color:var(--purple); font-size:1.2em">模块 9.3</strong><br>
+          连接碰撞信号<br>
+          碰到 enemy 组敌人时提前爆炸<br>
+          <span style="color:var(--muted);font-size:.9em">核心：body_entered + is_in_group</span>
+        </div>
+        <div class="tip">
+          <strong>教学建议：</strong>严格按照 9.1 → 9.2 → 9.3 顺序推进，每个阶段都可独立运行验证。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第10页：方案A Missile飞行 -->
+<section class="slide">
+  <div class="page-num">11</div>
+    <div class="slide-content">
+      <h2>方案 A：Missile 飞行（模块 9.1）</h2>
+    <div class="two-col" style="margin-top:.5em">
+      <div class="col">
+        <p style="color:var(--muted); margin-bottom:1em">适用对象：<strong>所有学生</strong>（推荐先做这个）</p>
+        <ul>
+          <li>创建 Missile.tscn（Area2D + Sprite2D + CollisionShape2D + Timer）</li>
+          <li>Timer：Wait Time = <strong>1</strong>，One Shot + Autostart 开启</li>
+          <li>先连接 Timer 的 timeout 信号，再补充脚本</li>
+          <li>用 <code>get_parent().add_child(missile)</code> 加到 World 层</li>
+        </ul>
+      </div>
+      <div class="col">
+<pre>extends Area2D
+
+var direction = Vector2.RIGHT
+var speed = 400
+
+func _physics_process(delta):
+    global_position += direction * speed * delta
+
+func _on_timer_timeout():
+    queue_free()</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第11页：方案B Explosion爆炸 -->
+<section class="slide">
+  <div class="page-num">12</div>
+    <div class="slide-content">
+      <h2>方案 B：Explosion 爆炸（模块 9.2）</h2>
+    <div class="two-col" style="margin-top:.5em">
+      <div class="col">
+        <p style="color:var(--muted); margin-bottom:1em">适用对象：<strong>进度快的学生</strong></p>
+        <p style="margin-bottom:.8em"><strong>Explosion.tscn 节点结构：</strong></p>
+        <ul>
+          <li>Area2D（根节点）+ Sprite2D</li>
+          <li>CollisionShape2D（圆形，Radius 控制范围）</li>
+          <li>Timer：Wait Time = <strong>0.2</strong>，自动删除</li>
+          <li>连接 Area2D 的 body_entered 信号销毁敌人</li>
+        </ul>
+      </div>
+      <div class="col">
+<pre>extends Area2D
+
+@export var explosion_scene: PackedScene
+
+func explode():
+    var explosion = explosion_scene.instantiate()
+    explosion.global_position = global_position
+    get_parent().add_child(explosion)
+    queue_free()
+
+func _on_timer_timeout():
+    explode()</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第12页：Player.gd -->
+<section class="slide">
+  <div class="page-num">13</div>
+    <div class="slide-content">
+      <h2>Player.gd 添加代码</h2>
+    <div class="two-col" style="margin-top:.5em">
+      <div class="col">
+        <p style="color:var(--muted); margin-bottom:1em">在 Player.gd 中添加 missile 发射逻辑：</p>
+        <ul>
+          <!-- <li><code>last_dir</code> 记录玩家最后朝向，站着不动时也能发射</li> -->
+          <li>用 <code>get_parent().add_child(missile)</code> 加到 World 层</li>
+          <li>不要加到 Player 下，否则导弹会跟着玩家移动</li>
+          <li>记得在 Inspector 拖入 Missile.tscn</li>
+        </ul>
+      </div>
+      <div class="col">
+<pre>@export var missile_scene: PackedScene
+
+func _physics_process(delta):
+    var direction = Input.get_vector(
+        "ui_left", "ui_right",
+        "ui_up", "ui_down")
+
+func _input(event):
+    if event.is_action_pressed("fire_missile"):
+        fire_missile()
+
+func fire_missile():
+    var missile = missile_scene.instantiate()
+    missile.global_position = global_position
+    get_parent().add_child(missile)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第13页：模块9.3 -->
+<section class="slide">
+  <div class="page-num">14</div>
+    <div class="slide-content">
+      <h2>模块 9.3：碰到敌人提前爆炸</h2>
+    <div class="two-col" style="margin-top:.5em">
+      <div class="col">
+        <p style="margin-bottom:.8em"><strong>两种爆炸触发方式：</strong></p>
+        <ul>
+          <li>情况1：1秒后自动爆炸（Timer timeout）</li>
+          <li>情况2：碰到敌人立即爆炸（body_entered）</li>
+        </ul>
+        <div class="tip" style="margin-top:1em">
+          给敌人添加 <code>enemy</code> 组，并检查 Layer/Mask
+        </div>
+      </div>
+      <div class="col">
+<pre>extends Area2D
+
+@export var explosion_scene: PackedScene
+
+func _on_body_entered(body):
+    if body.is_in_group("enemy"):
+        explode()
+
+func _on_timer_timeout():
+    explode()
+
+func explode():
+    var explosion = explosion_scene.instantiate()
+    explosion.global_position = global_position
+    get_parent().add_child(explosion)
+    queue_free()</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第14页：常见报错 -->
+<section class="slide">
+  <div class="page-num">15</div>
+    <div class="slide-content">
+      <h2>⚠️ 常见报错</h2>
+    <div class="two-col" style="margin-top:1em">
+      <div class="col">
+        <div class="card"><strong class="hl-red">按键没反应</strong><br>→ missile_scene 没拖入 Inspector<br>→ 检查 @export 变量是否配置</div>
+        <div class="card"><strong class="hl-red">Missile 不消失</strong><br>→ queue_free() 没写或位置不对<br>→ 确认在 signal callback 里</div>
+      </div>
+      <div class="col">
+        <div class="card"><strong class="hl-red">爆炸没效果 / 检测不到敌人</strong><br>→ CollisionLayer/Mask 没配置<br>→ Missile 的 Mask 要勾选敌人所在的层<br>→ 敌人的 Layer 也要正确设置<br>→ 两者对应上，body_entered 才能触发</div>
+        <div class="card"><strong class="hl-red">Missile 一直存在</strong><br>→ Timer 没连上 signal<br>→ 检查 Timer signal 连接</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第15页：检查点 -->
+<section class="slide">
+  <div class="page-num">16</div>
+    <div class="slide-content">
+      <h2>✅ 课堂检查点</h2>
+    <div class="two-col" style="margin-top:1.5em">
+      <div class="col">
+        <div class="card card-green">
+          <strong style="color:var(--secondary)">9.1 核心检查点</strong><br>
+          导弹能飞、1秒后自动消失、按 Z 能发射
+        </div>
+        <div class="card card-red">
+          <strong style="color:var(--danger)">9.2 核心检查点</strong><br>
+          导弹消失的同时出现爆炸、爆炸短暂存在后消失
+        </div>
+      </div>
+      <div class="col">
+        <div class="card card-purple">
+          <strong style="color:var(--purple)">9.3 核心检查点</strong><br>
+          导弹碰到敌人立即爆炸、不碰敌人则等 1 秒后自爆
+        </div>
+        <div class="tip">
+          <strong>Layer/Mask 检查：</strong>如果检测不到，先检查 Collision Layer / Mask 是否对应。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第16页：学生进度 -->
+<section class="slide">
+  <div class="page-num">17</div>
+    <div class="slide-content">
+      <h2>👥 学生进度对照</h2>
+    <div class="two-col" style="margin-top:1.5em">
+      <div class="col">
+        <div class="card card-purple">
+          <strong style="color:var(--purple)">快轨（9.1 + 9.2 + 9.3）</strong><br>
+          完成 Missile 飞行<br>
+          Explosion 爆炸<br>
+          碰到敌人提前爆炸
+        </div>
+      </div>
+      <div class="col">
+        <div class="card card-green">
+          <strong style="color:var(--secondary)">慢轨（9.1）</strong><br>
+          完成 Missile 发射与飞行<br>
+          1秒后自动消失
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 第17页：课后小结 -->
+<section class="slide">
+  <div class="page-num">18</div>
+    <div class="slide-content">
+      <h2>课后小结</h2>
+    <div style="margin-top:2em; font-size:1.2em; line-height:2; color:var(--text)">
+      <p>今天我们做了一个新的武器：<strong>Missile</strong></p>
+      <p style="margin-top:1em">它的核心技术 —— <span class="hl">signal</span>、<span class="hl">实例化</span>、<span class="hl">queue_free</span> ——</p>
+      <p>其实我们之前课上都学过。</p>
+      <p style="margin-top:1em">这次只是把它们串在一起，</p>
+      <p>从一个全新的角度重新用了一遍。</p>
+      <p style="margin-top:1.5em; color:var(--primary); font-weight:bold; font-size:1.3em">这就是"巩固"的意思：</p>
+      <p>不是学新单词，是把旧单词组成新的句子。</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- 底部导航 -->
+<div id="nav-bar">
+  <button id="btn-prev" onclick="prevSlide()">← 上一页</button>
+  <span id="slide-counter">1 / 17</span>
+  <button id="btn-next" onclick="nextSlide()">下一页 →</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+const total = slides.length;
+
+function showSlide(n) {
+  slides.forEach(s => s.classList.remove('active'));
+  slides[n].classList.add('active');
+  document.getElementById('slide-counter').textContent = (n+1) + ' / ' + total;
+  document.getElementById('btn-prev').disabled = n === 0;
+  document.getElementById('btn-next').disabled = n === total-1;
+}
+
+function nextSlide() {
+  if (current < total-1) { current++; showSlide(current); }
+}
+
+function prevSlide() {
+  if (current > 0) { current--; showSlide(current); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+});
+
+showSlide(0);
+</script>
+
+</body>
+</html>
